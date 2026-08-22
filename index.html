@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Quiet Threshold</title>
+  <style>
+
+    /* ── RESET & BASE ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --stone:      #E8E4DC;
+      --slate:      #2E3A42;
+      --lichen:     #7A8C7E;
+      --linen:      #F0E8D8;
+      --peat:       #1C1610;
+      --gold:       #9C8456;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Georgia', serif;
+      overflow-x: hidden;
+      background-color: var(--stone);
+      color: var(--slate);
+    }
+
+    /* ── SCROLL DRIFT ─────────────────────────────────────────── */
+    /* Body background drifts from --stone to --linen via JS below */
+
+    /* ── TYPOGRAPHY ───────────────────────────────────────────── */
+    p {
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      line-height: 1.95;
+      max-width: 620px;
+      margin: 0 auto 1.8em;
+      letter-spacing: 0.012em;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      font-weight: normal;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+
+    h2 {
+      font-size: clamp(0.75rem, 1.4vw, 0.88rem);
+      font-weight: normal;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    em { font-style: italic; }
+
+    /* ── LAYOUT ───────────────────────────────────────────────── */
+    section {
+      width: 100%;
+      padding: clamp(5rem, 11vw, 9rem) clamp(1.5rem, 8vw, 6rem);
+      position: relative;
+    }
+
+    .inner {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ── VERTICAL RULE ────────────────────────────────────────── */
+    .v-rule {
+      width: 1px;
+      height: 3rem;
+      background: var(--gold);
+      opacity: 0.35;
+      margin: 0 auto 3.5rem;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    #hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: clamp(4rem, 8vw, 7rem);
+      position: relative;
+      overflow: hidden;
+      background-color: #1a2228;
+    }
+
+    #hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 45%;
+      opacity: 0.55;
+      filter: grayscale(15%);
+    }
+
+    /* hidden once real image loads */
+    #hero-placeholder {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 60%, #2E3A42 0%, #1a2228 55%, #0e1418 100%);
+      opacity: 0;
+    }
+
+    #hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 0 clamp(1.5rem, 8vw, 6rem);
+      max-width: 820px;
+    }
+
+    #hero-accent {
+      width: 2px;
+      height: 2.8rem;
+      background: var(--gold);
+      margin-bottom: 1.6rem;
+      opacity: 0.65;
+    }
+
+    #hero-content h1 { color: var(--stone); margin-bottom: 1.1rem; }
+
+    #hero-content .sub {
+      color: #b0aca4;
+      font-size: clamp(0.88rem, 1.6vw, 1rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      max-width: 420px;
+      margin: 0;
+      line-height: 1.7;
+    }
+
+    /* ── SCROLL HINT ──────────────────────────────────────────── */
+    #scroll-hint {
+      position: absolute;
+      bottom: 2.8rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      animation: drift 3.2s ease-in-out infinite;
+    }
+
+    #scroll-hint span {
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #7a7670;
+    }
+
+    #scroll-hint svg {
+      width: 14px; height: 22px;
+      stroke: #7a7670; fill: none; stroke-width: 1.2;
+    }
+
+    @keyframes drift {
+      0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+      50%       { opacity: 0.55; transform: translateX(-50%) translateY(5px); }
+    }
+
+    /* ── OPENING ──────────────────────────────────────────────── */
+    #opening { background: transparent; }
+    #opening p { color: var(--slate); }
+
+    #opening .threshold-line {
+      text-align: center;
+      font-style: italic;
+      font-size: clamp(1.05rem, 2vw, 1.22rem);
+      color: var(--lichen);
+      letter-spacing: 0.04em;
+      margin: 2.5rem auto 0;
+      max-width: 480px;
+    }
+
+    /* ── LANDSCAPE ────────────────────────────────────────────── */
+    #landscape { background: transparent; }
+    #landscape p { color: var(--slate); }
+
+    #landscape .pull {
+      font-size: clamp(1.1rem, 2.2vw, 1.38rem);
+      line-height: 1.75;
+      color: var(--lichen);
+      letter-spacing: 0.015em;
+      border-left: 1px solid var(--lichen);
+      padding-left: 1.6rem;
+      margin: 3rem auto;
+      max-width: 560px;
+      font-style: italic;
+    }
+
+    /* ── ANAM CARA ────────────────────────────────────────────── */
+    #anam { background: transparent; }
+
+    #anam .anam-word {
+      display: block;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-style: italic;
+      color: var(--gold);
+      letter-spacing: 0.05em;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    #anam .anam-gloss {
+      display: block;
+      text-align: center;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      color: var(--lichen);
+      margin-bottom: 3.5rem;
+    }
+
+    #anam p { color: var(--peat); }
+
+    /* ── GUIDE ────────────────────────────────────────────────── */
+    #guide { background: transparent; }
+    #guide h2 { color: var(--lichen); }
+    #guide p  { color: var(--peat); }
+
+    #guide .guide-note {
+      text-align: center;
+      font-style: italic;
+      font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      margin-top: 2.5rem;
+    }
+
+    /* ── PRACTICALITIES ───────────────────────────────────────── */
+    #practicalities { background: transparent; }
+    #practicalities h2 { color: var(--gold); }
+
+    .detail-row {
+      display: flex;
+      align-items: baseline;
+      gap: 1.2rem;
+      max-width: 620px;
+      margin: 0 auto;
+      padding: 1rem 0;
+      border-bottom: 1px solid rgba(156,132,86,0.18);
+      font-size: clamp(0.9rem, 1.6vw, 1.02rem);
+      color: var(--peat);
+    }
+
+    .detail-row:first-of-type { border-top: 1px solid rgba(156,132,86,0.18); }
+
+    .detail-label {
+      flex: 0 0 110px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      color: var(--gold);
+    }
+
+    #practicalities .caveat {
+      text-align: center;
+      font-style: italic;
+      font-size: clamp(0.88rem, 1.5vw, 0.98rem);
+      color: var(--lichen);
+      margin-top: 3rem;
+      max-width: 520px;
+    }
+
+    /* ── COME IN ──────────────────────────────────────────────── */
+    #come-in {
+      background: transparent;
+      padding-bottom: clamp(7rem, 14vw, 11rem);
+    }
+
+    #come-in h2 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      letter-spacing: 0.14em;
+      color: var(--gold);
+      margin-bottom: 2.8rem;
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: normal;
+    }
+
+    #come-in p { color: var(--peat); }
+
+    #come-in .permission {
+      font-size: clamp(1.05rem, 2vw, 1.22rem);
+      font-style: italic;
+      color: var(--peat);
+      text-align: center;
+      max-width: 540px;
+      margin: 0 auto 2.8rem;
+      line-height: 1.8;
+    }
+
+    #come-in .question {
+      font-size: clamp(1rem, 1.9vw, 1.18rem);
+      font-style: italic;
+      color: var(--peat);
+      border-left: 1px solid var(--gold);
+      padding-left: 1.6rem;
+      max-width: 540px;
+      margin: 0 auto 3.5rem;
+      line-height: 1.85;
+    }
+
+    #come-in .instruction {
+      text-align: center;
+      font-size: clamp(0.88rem, 1.5vw, 0.98rem);
+      color: var(--lichen);
+      letter-spacing: 0.06em;
+      margin-bottom: 2.8rem;
+      max-width: 480px;
+    }
+
+    #come-in .email-link {
+      display: block;
+      width: fit-content;
+      margin: 0 auto 1.2rem;
+      padding: 1rem 2.4rem;
+      border: 1px solid rgba(156,132,86,0.45);
+      font-size: clamp(0.78rem, 1.4vw, 0.88rem);
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-decoration: none;
+      transition: background 0.4s, border-color 0.4s, color 0.4s;
+    }
+
+    #come-in .email-link:hover {
+      background: rgba(156,132,86,0.08);
+      border-color: var(--gold);
+      color: var(--peat);
+    }
+
+    #come-in .response-note {
+      text-align: center;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      color: var(--lichen);
+      opacity: 0.7;
+      margin-top: 1rem;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 2.5rem clamp(1.5rem, 8vw, 6rem);
+      text-align: center;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--lichen);
+      opacity: 0.45;
+    }
+
+    /* ── MOBILE ───────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .detail-row { flex-direction: column; gap: 0.3rem; }
+      .detail-label { flex: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ══ HERO ════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div id="hero-placeholder" aria-hidden="true"></div>
+  <img id="hero-img" src="hero.jpg" alt="The landscape of The Quiet Threshold" />
+  <div id="hero-content">
+    <div id="hero-accent"></div>
+    <h1>The Quiet<br>Threshold</h1>
+    <p class="sub">A private pilgrimage in Ireland<br>One person &nbsp;·&nbsp; One guide &nbsp;·&nbsp; Three to five days</p>
+  </div>
+  <div id="scroll-hint" aria-hidden="true">
+    <span>Enter</span>
+    <svg viewBox="0 0 14 22"><path d="M7 0v18M1 12l6 8 6-8"/></svg>
+  </div>
+</section>
+
+<!-- ══ OPENING ═════════════════════════════════════════════════════ -->
+<section id="opening">
+  <div class="inner">
+    <div class="v-rule"></div>
+    <p>There is a kind of tiredness that sleep does not touch. You have lived well, worked hard, loved faithfully — and still something in you remains unanswered. Not broken. Not lost. Simply standing, without knowing it, at the edge of something you have not yet had the silence to name.</p>
+    <p>This is not a failure of will or faith. It is the soul's oldest invitation — to stop, to turn inward, and to listen for what has been waiting beneath the noise of a life fully lived.</p>
+    <p class="threshold-line">You are at a threshold.</p>
+  </div>
+</section>
+
+<!-- ══ LANDSCAPE ══════════════════════════════════════════════════ -->
+<section id="landscape">
+  <div class="inner">
+    <div class="v-rule"></div>
+    <p>There are places in Ireland where the distance between this world and whatever lies beneath it becomes, almost imperceptibly, very small. The old ones knew this. They built no walls around such places, wrote no maps to them. They simply went, and were changed, and came home different in ways they could not always articulate but never forgot.</p>
+    <p class="pull">The land here is not a backdrop. It is a presence — older than memory, patient beyond measure, indifferent to urgency and deeply kind to those who come slowly, on foot, with nothing to prove.</p>
+    <p>We go to such places. Not as tourists. As pilgrims. There is a difference that cannot be explained but is felt immediately upon arrival.</p>
+    <p>One person. Ancient land. Slow walking. Mornings that begin in darkness and open into light. Conversation, and long silence held without discomfort. The particular grace that comes when a human being is accompanied, without agenda, into the depths of their own longing.</p>
+  </div>
+</section>
+
+<!-- ══ ANAM CARA ═══════════════════════════════════════════════════ -->
+<section id="anam">
+  <div class="inner">
+    <div class="v-rule"></div>
+    <span class="anam-word">Anam Cara</span>
+    <span class="anam-gloss">Soul Friend</span>
+    <p>The ancient Irish understood something about human companionship that modern life has largely forgotten. An anam cara is not a spouse, not a therapist, not a spiritual teacher — though there may be elements of all three. An anam cara is someone who sees you clearly, without judgment, and holds space for the truth of your becoming.</p>
+    <p>For three to five days, I am your anam cara. Not to direct, not to fix, but to accompany. To listen more than I speak. To know when to offer silence and when to offer a question. To help you hear what your own deepest wisdom has been trying to tell you.</p>
+  </div>
+</section>
+
+<!-- ══ GUIDE ══════════════════════════════════════════════════════ -->
+<section id="guide">
+  <div class="inner">
+    <h2>How This Works</h2>
+    <div class="v-rule"></div>
+    <p>You arrive in County Clare or County Galway on your chosen dates. We meet at your accommodation — a simple, beautiful place with views of the land. Breakfast together. Then we walk. The pace is slow. There is no goal but the walking itself.</p>
+    <p>We visit thin places. Holy wells. Ancient sites. The landscape shapes the conversation; the conversation shapes what we notice. There is time for silence, for talking, for stillness. Mornings. Afternoons. Evenings by the fire with tea and stories.</p>
+    <p>What unfolds cannot be predicted. That is precisely the point. When you are held by such a place, and accompanied by someone who knows how to listen, something in you can finally rest and begin to speak.</p>
+    <p class="guide-note">This is not a retreat center experience. It is not led meditation or group processing. It is intimate, personal, and utterly private.</p>
+  </div>
+</section>
+
+<!-- ══ PRACTICALITIES ═════════════════════════════════════════════ -->
+<section id="practicalities">
+  <div class="inner">
+    <h2>Practicalities</h2>
+    <div class="v-rule"></div>
+    <div class="detail-row">
+      <span class="detail-label">Duration</span>
+      <span>Three to five days. You choose.</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Location</span>
+      <span>County Clare or County Galway, Ireland. I will recommend specific places based on what calls to you.</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Accommodation</span>
+      <span>A simple, comfortable cottage or guest house. I arrange this. Meals are included (simple, local, nourishing).</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Walking</span>
+      <span>Three to five miles most days, at an easy pace. No climbing. Paths are gentle. If mobility is a concern, we adapt.</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Cost</span>
+      <span>€600 per day (accommodation, meals, guidance, and my presence). This includes everything except flights to Ireland.</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">When</span>
+      <span>Year-round. Spring and autumn are particularly beautiful. Winter has its own severe grace. Summer is warm and long.</span>
+    </div>
+    <p class="caveat">You bring yourself, comfortable walking shoes, and an open heart. I bring the rest.</p>
+  </div>
+</section>
+
+<!-- ══ COME IN ════════════════════════════════════════════════════ -->
+<section id="come-in">
+  <div class="inner">
+    <h2>Come In</h2>
+    <div class="v-rule"></div>
+    <p class="permission">If you are reading this, you have already felt the pull. The question you carry — unspoken, but real — is the only invitation you need.</p>
+    <p class="question">What would it mean to have three to five days entirely for listening to your own soul, guided by someone trained in the old art of accompaniment, in a place where the veil between worlds grows thin?</p>
+    <p class="instruction">If this resonates, write to me. Tell me something true about where you are, and what you are seeking. Tell me when you might be free. I will write back within two days.</p>
+    <a href="mailto:hello@thequietthreshold.com" class="email-link">Get In Touch</a>
+    <p class="response-note">Your inquiry will be treated with the same care and presence you can expect from this pilgrimage itself.</p>
+  </div>
+</section>
+
+<!-- ══ FOOTER ═════════════════════════════════════════════════════ -->
+<footer>
+  The Quiet Threshold &nbsp;·&nbsp; A Private Pilgrimage &nbsp;·&nbsp; Ireland
+</footer>
+
+<script>
+  // ── SCROLL BACKGROUND DRIFT ─────────────────────────────────────
+  // Gradually shift body background color from --stone to --linen as user scrolls
+  window.addEventListener('scroll', () => {
+    const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    const stone = [232, 228, 220];      // #E8E4DC
+    const linen = [240, 232, 216];      // #F0E8D8
+    
+    const r = Math.round(stone[0] + (linen[0] - stone[0]) * scrollPercent);
+    const g = Math.round(stone[1] + (linen[1] - stone[1]) * scrollPercent);
+    const b = Math.round(stone[2] + (linen[2] - stone[2]) * scrollPercent);
+    
+    document.body.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+  });
+
+  // ── HERO IMAGE FADE IN ──────────────────────────────────────────
+  // Fade out placeholder and fade in image as it loads
+  const heroImg = document.getElementById('hero-img');
+  const heroPlaceholder = document.getElementById('hero-placeholder');
+  
+  if (heroImg.complete) {
+    // Image is cached/loaded
+    heroPlaceholder.style.opacity = '0';
+  } else {
+    // Wait for image to load
+    heroImg.addEventListener('load', () => {
+      heroPlaceholder.style.opacity = '0';
+    });
+  }
+</script>
+
+</body>
+</html>
